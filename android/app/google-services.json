@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "862463876191",
+    "project_id": "erp-system-9a5fd",
+    "storage_bucket": "erp-system-9a5fd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862463876191:android:87044b446129101e910fea",
+        "android_client_info": {
+          "package_name": "com.deverpsystem.erp_system"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA1WG_ZNR9VdPl-OtrMQAZ1VFxFo8Gw-mQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
