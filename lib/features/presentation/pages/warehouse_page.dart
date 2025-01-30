@@ -30,7 +30,7 @@ class _WarehousePageState extends State<WarehousePage> {
 
     try {
       final warehouseItem = {
-        'type': _typeController.text,
+        'type': _typeController.text.toLowerCase(),
         'amount': double.parse(_amountController.text),
         'unit': _selectedUnit,  // Store the selected unit
         'createdAt': FieldValue.serverTimestamp(),

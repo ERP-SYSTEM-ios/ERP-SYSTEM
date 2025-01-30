@@ -47,7 +47,7 @@ class _OrderPageState extends State<OrderPage> {
 
         if (userDoc.exists) {
           setState(() {
-            currentCompanyName = userDoc['companyName'];
+            currentCompanyName = userDoc['companyId'];
           });
           _fetchLatestOrderNumber();  // Fetch order number after company name is set
         }
@@ -93,6 +93,8 @@ class _OrderPageState extends State<OrderPage> {
     }
   }
 // Fetch customer suggestions
+
+// Fetch customer suggestions
 void _fetchCustomerSuggestions(String query) async {
   if (query.isEmpty || currentCompanyName == null) {
     setState(() {
@@ -108,7 +110,7 @@ void _fetchCustomerSuggestions(String query) async {
         .collection('customers')
         .orderBy('companyName')
         .startAt([query])
-        .endAt([query + '\uf8ff'])
+        .endAt(['$query\uf8ff'])
         .get();
 
     setState(() {
@@ -116,6 +118,10 @@ void _fetchCustomerSuggestions(String query) async {
           .map((doc) => doc['companyName'].toString())
           .toList();
     });
+    print("Query: $query\uf8ff");
+    print("Customer suggestions: $customerSuggestions");
+    print("Current comp : $currentCompanyName");
+    print("Current customerSnapshot.docs : ${customerSnapshot.docs}");
   } catch (e) {
     print("Error fetching company name suggestions: $e");
   }
@@ -137,7 +143,7 @@ void _fetchProductSuggestions(String query) async {
         .collection('products')
         .orderBy('name')
         .startAt([query])
-        .endAt([query + '\uf8ff'])
+        .endAt(['$query\uf8ff'])
         .get();
 
     setState(() {

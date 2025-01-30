@@ -36,7 +36,7 @@ class _OrdersCartState extends State<OrdersCart> {
 
         if (userDoc.exists) {
           setState(() {
-            currentCompanyName = userDoc['companyName'];
+            currentCompanyName = userDoc['companyId'];
           });
         }
       }
@@ -103,7 +103,7 @@ class _OrdersCartState extends State<OrdersCart> {
 
   // Method to update the warehouse stock
   Future<void> _updateWarehouseStock() async {
-    final productName = _productTypeController.text.trim();  // Trim spaces from product name
+    final productName = _productTypeController.text.trim().toLowerCase();  // Trim spaces from product name
     final orderQuantity = int.parse(_quantityController.text);
 
     // Print product name to debug
@@ -121,19 +121,22 @@ class _OrdersCartState extends State<OrdersCart> {
           .where('type', isEqualTo: trimmedProductName)
           .limit(1)
           .get();
+      print("productSnapshot  : $productSnapshot");
+      print("productSnapshot  : $trimmedProductName");
 
       if (productSnapshot.docs.isNotEmpty) {
         final productData = productSnapshot.docs.first;
         final productType = productData['type'];  // Get 'type' field from product
 
         print("Found product type: $productType");
+        final toLowerProductType = productType.toLowerCase();
 
         // Now use the product's 'type' to find the corresponding item in the warehouse
         QuerySnapshot warehouseSnapshot = await FirebaseFirestore.instance
             .collection('Companies')
             .doc(currentCompanyName)
             .collection('warehouse')
-            .where('type', isEqualTo: productType)
+            .where('type', isEqualTo: toLowerProductType)
             .limit(1)
             .get();
 
