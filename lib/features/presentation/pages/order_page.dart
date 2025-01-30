@@ -92,36 +92,7 @@ class _OrderPageState extends State<OrderPage> {
       });
     }
   }
-
-  // Fetch product suggestions
-  void _fetchProductSuggestions(String query) async {
-    if (query.isEmpty || currentCompanyName == null) {
-      setState(() {
-        productSuggestions = [];
-      });
-      return;
-    }
-
-    try {
-      var productSnapshot = await FirebaseFirestore.instance
-          .collection('Companies')
-          .doc(currentCompanyName)
-          .collection('products')
-          .where('name', isGreaterThanOrEqualTo: query)
-          .where('name', isLessThanOrEqualTo: '$query\uf8ff')
-          .get();
-
-      setState(() {
-        productSuggestions = productSnapshot.docs
-            .map((doc) => doc['name'] as String)
-            .toList();
-      });
-    } catch (e) {
-      print("Error fetching product suggestions: $e");
-    }
-  }
-
-  // Fetch customer suggestions
+// Fetch customer suggestions
 void _fetchCustomerSuggestions(String query) async {
   if (query.isEmpty || currentCompanyName == null) {
     setState(() {
@@ -131,62 +102,80 @@ void _fetchCustomerSuggestions(String query) async {
   }
 
   try {
-    print("Fetching company name suggestions for query: '$query'");
-
-    // Querying the 'customers' subcollection inside the 'Companies/{companyId}' collection
     var customerSnapshot = await FirebaseFirestore.instance
-        .collection('Companies')  // Main collection
-        .doc(currentCompanyName)  // Using the company name (as document ID)
-        .collection('customers')  // Customers subcollection
-        .where('companyName', isGreaterThanOrEqualTo: query)  // Searching for companyName
-        .where('companyName', isLessThanOrEqualTo: '$query\uf8ff')  // Matching query
+        .collection('Companies')
+        .doc(currentCompanyName)
+        .collection('customers')
+        .orderBy('companyName')
+        .startAt([query])
+        .endAt([query + '\uf8ff'])
         .get();
-
-    // Log how many documents were fetched
-    print("Fetched ${customerSnapshot.docs.length} company name suggestions.");
-
-    if (customerSnapshot.docs.isEmpty) {
-      print("No companies found with the query: '$query'");
-    }
 
     setState(() {
       customerSuggestions = customerSnapshot.docs
-          .map((doc) {
-            print("Found company name: ${doc['companyName']}");
-            return doc['companyName'] as String;
-          }).toList();
+          .map((doc) => doc['companyName'].toString())
+          .toList();
     });
   } catch (e) {
     print("Error fetching company name suggestions: $e");
   }
 }
 
-  // Fetch product price
-  Future<void> _fetchProductPrice() async {
-    if (_productController.text.isEmpty || currentCompanyName == null) return;
-
-    try {
-      var productSnapshot = await FirebaseFirestore.instance
-          .collection('Companies')
-          .doc(currentCompanyName)
-          .collection('products')
-          .where('name', isEqualTo: _productController.text)
-          .limit(1)
-          .get();
-
-      if (productSnapshot.docs.isNotEmpty) {
-        setState(() {
-          _priceController.text = productSnapshot.docs.first['price'].toString();
-        });
-      } else {
-        setState(() {
-          _priceController.clear(); // Clear price if product not found
-        });
-      }
-    } catch (e) {
-      print("Error fetching product price: $e");
-    }
+// Fetch product suggestions
+void _fetchProductSuggestions(String query) async {
+  if (query.isEmpty || currentCompanyName == null) {
+    setState(() {
+      productSuggestions = [];
+    });
+    return;
   }
+
+  try {
+    var productSnapshot = await FirebaseFirestore.instance
+        .collection('Companies')
+        .doc(currentCompanyName)
+        .collection('products')
+        .orderBy('name')
+        .startAt([query])
+        .endAt([query + '\uf8ff'])
+        .get();
+
+    setState(() {
+      productSuggestions = productSnapshot.docs
+          .map((doc) => doc['name'] as String)
+          .toList();
+    });
+  } catch (e) {
+    print("Error fetching product suggestions: $e");
+  }
+}
+
+// Fetch product price
+Future<void> _fetchProductPrice() async {
+  if (_productController.text.isEmpty || currentCompanyName == null) return;
+
+  try {
+    var productSnapshot = await FirebaseFirestore.instance
+        .collection('Companies')
+        .doc(currentCompanyName)
+        .collection('products')
+        .where('name', isEqualTo: _productController.text)
+        .limit(1)
+        .get();
+
+    if (productSnapshot.docs.isNotEmpty) {
+      setState(() {
+        _priceController.text = productSnapshot.docs.first['price'].toString();
+      });
+    } else {
+      setState(() {
+        _priceController.clear();
+      });
+    }
+  } catch (e) {
+    print("Error fetching product price: $e");
+  }
+}
 
   // Calculate the total price
   void _calculateTotal() {

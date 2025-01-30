@@ -1,4 +1,3 @@
-
 import 'package:erp_system/features/user_auth/firebase_auth_implementation/firebase_auth_services.dart';
 import 'package:erp_system/features/presentation/pages/login_page.dart';
 import 'package:erp_system/features/presentation/widgets/form_container_widget.dart';
@@ -92,7 +91,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     child: const Center(
                       child: Text(
-                        "Hesam Oluştur",
+                        "Hesap Oluştur",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -118,7 +117,7 @@ class _SignUpPageState extends State<SignUpPage> {
                         );
                       },
                       child: const Text(
-                        "Giris Yap",
+                        "Giriş Yap",
                         style: TextStyle(
                             color: Colors.blue, fontWeight: FontWeight.bold),
                       ),
@@ -133,76 +132,75 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-void _signUp() async {
-  String name = _nameController.text.trim();
-  String surname = _surnameController.text.trim();
-  String companyName = _companyNameController.text.trim();
-  String email = _emailController.text.trim();
-  String password = _passwordController.text.trim();
+  void _signUp() async {
+    String name = _nameController.text.trim();
+    String surname = _surnameController.text.trim();
+    String companyName = _companyNameController.text.trim();
+    String email = _emailController.text.trim();
+    String password = _passwordController.text.trim();
 
-  if (name.isEmpty || surname.isEmpty || companyName.isEmpty || email.isEmpty || password.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Tüm alanların doldurulması zorunludur.")),
-    );
-    return;
-  }
-
-  try {
-    User? user = await _auth.signUpWithEmailAndPassword(email, password);
-
-    if (user != null) {
-      // Normalize the company name to generate a consistent company ID
-      String normalizedCompanyName = companyName.toLowerCase().replaceAll(' ', '_');
-      String companyId = normalizedCompanyName;
-
-      // Check if the company already exists
-      final existingCompany = await FirebaseFirestore.instance
-          .collection("Companies")
-          .doc(companyId)
-          .get();
-
-      if (existingCompany.exists) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Şirket adı zaten mevcut. Lütfen farklı bir ad seçin.")),
-        );
-        return;
-      }
-
-      // Create the company in the Companies collection
-      await FirebaseFirestore.instance.collection("Companies").doc(companyId).set({
-        "companyName": companyName,
-        "createdAt": FieldValue.serverTimestamp(),
-        "userId": user.uid, // Link the company to the user
-      });
-
-      // Save user information along with the companyId
-      await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
-        "name": name,
-        "surname": surname,
-        "companyName": companyName,
-        "companyId": companyId, // Save the generated company ID
-        "email": email,
-        "createdAt": FieldValue.serverTimestamp(),
-      });
-
-      if (kDebugMode) {
-        print("User registered and company created with companyId: $companyId.");
-      }
-
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, "/", arguments: user.email);
-      }
-    }
-  } catch (e) {
-    if (kDebugMode) {
-      print("Error: $e");
-    }
-    if (mounted) {
+    if (name.isEmpty || surname.isEmpty || companyName.isEmpty || email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        const SnackBar(content: Text("Tüm alanların doldurulması zorunludur.")),
       );
+      return;
+    }
+
+    try {
+      User? user = await _auth.signUpWithEmailAndPassword(email, password);
+
+      if (user != null) {
+        // Normalize company name for consistent Firestore storage
+        String normalizedCompanyName = companyName.toLowerCase().replaceAll(' ', '_');
+        String companyId = normalizedCompanyName;
+
+        // Check if the company already exists
+        final existingCompany = await FirebaseFirestore.instance
+            .collection("Companies")
+            .doc(companyId)
+            .get();
+
+        if (existingCompany.exists) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Şirket adı zaten mevcut. Lütfen farklı bir ad seçin.")),
+          );
+          return;
+        }
+
+        // Create the company in the Companies collection
+        await FirebaseFirestore.instance.collection("Companies").doc(companyId).set({
+          "companyName": companyName.toLowerCase(), // Store in lowercase
+          "createdAt": FieldValue.serverTimestamp(),
+          "userId": user.uid,
+        });
+
+        // Save user information along with the companyId
+        await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
+          "name": name,
+          "surname": surname,
+          "companyName": companyName.toLowerCase(), // Store in lowercase
+          "companyId": companyId, // Save the generated company ID
+          "email": email,
+          "createdAt": FieldValue.serverTimestamp(),
+        });
+
+        if (kDebugMode) {
+          print("User registered and company created with companyId: $companyId.");
+        }
+
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, "/", arguments: user.email);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error: $e");
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
+      }
     }
   }
-}
-
 }
